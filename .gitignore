@@ -1,0 +1,6 @@
+.venv
+.env**
+.idea
+**/migrations/*
+!**/migrations/__init__.py
+*.sqlite3
