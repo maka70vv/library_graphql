@@ -8,6 +8,7 @@ from library_api.schema import schema
 
 class ApiTestCase(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
+    GRAPHQL_URL = "http://localhost:8000/graphql/"
 
     def setUp(self):
         super().setUp()
@@ -31,10 +32,9 @@ class ApiTestCase(GraphQLTestCase):
             }
         }
         '''
-        response = self.query(
-            mutation,
-        )
+        response = self.query(mutation)
         self.assertResponseNoErrors(response)
+
         content = json.loads(response.content)
         self.assertIn('data', content)
         self.assertIn('createUser', content['data'])
@@ -59,7 +59,7 @@ class ApiTestCase(GraphQLTestCase):
 
     def test_me_query(self):
         token = get_token(self.user)
-        headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+        headers = {"AUTHORIZATION": f"JWT {token}"}
         query = '''
         {
             me {

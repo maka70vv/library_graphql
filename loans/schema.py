@@ -79,7 +79,7 @@ class CreateLoan(graphene.Mutation):
         loan = Loan.objects.create(
             book=book,
             reader=reader,
-            issue_date=datetime.now().date(),
+            loan_date=datetime.now().date(),
             loan_end_date=loan_end_date
         )
         return CreateLoan(loan=loan)
