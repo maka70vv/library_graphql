@@ -46,7 +46,7 @@ class ApiTestCase(GraphQLTestCase):
     def test_create_author_mutation(self):
         user = get_user_model().objects.get(pk=1)
         token = get_token(user)
-        headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+        headers = {"AUTHORIZATION": f"JWT {token}"}
         mutation = '''
         mutation {
             createAuthor(name: "New Author", biography: "New Biography") {
@@ -69,7 +69,7 @@ class ApiTestCase(GraphQLTestCase):
     def test_create_rating_mutation(self):
         user = get_user_model().objects.get(pk=1)
         token = get_token(user)
-        headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+        headers = {"AUTHORIZATION": f"JWT {token}"}
         mutation = '''
         mutation {
             createRating(bookId: %d, score: 5) {
@@ -89,7 +89,7 @@ class ApiTestCase(GraphQLTestCase):
         self.assertIn('createRating', content['data'])
         self.assertEqual(content['data']['createRating']['rating']['score'], 5)
 
-    def test_search_books(self):
+    def test_search_books_by_name(self):
         query = '''
         {
             searchBooks(title: "Book Title") {
@@ -107,10 +107,46 @@ class ApiTestCase(GraphQLTestCase):
         self.assertEqual(len(content['data']['searchBooks']), 1)
         self.assertEqual(content['data']['searchBooks'][0]['title'], 'Book Title')
 
+    def test_search_books_by_author_name(self):
+        query = '''
+        {
+            searchBooks(authorName: "Author Name") {
+                title
+            }
+        }
+        '''
+        response = self.query(
+            query,
+        )
+        self.assertResponseNoErrors(response)
+        content = json.loads(response.content)
+        self.assertIn('data', content)
+        self.assertIn('searchBooks', content['data'])
+        self.assertEqual(len(content['data']['searchBooks']), 1)
+        self.assertEqual(content['data']['searchBooks'][0]['title'], 'Book Title')
+
+    def test_search_books_by_dates(self):
+        query = '''
+        {
+            searchBooks(yearGte: 2023, yearLte: 2025) {
+                title
+            }
+        }
+        '''
+        response = self.query(
+            query,
+        )
+        self.assertResponseNoErrors(response)
+        content = json.loads(response.content)
+        self.assertIn('data', content)
+        self.assertIn('searchBooks', content['data'])
+        self.assertEqual(len(content['data']['searchBooks']), 1)
+        self.assertEqual(content['data']['searchBooks'][0]['title'], 'Book Title')
+
     def test_create_book_by_isbn_mutation(self):
         user = get_user_model().objects.get(pk=1)
         token = get_token(user)
-        headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+        headers = {"AUTHORIZATION": f"JWT {token}"}
         mutation = '''
         mutation {
             createBookByIsbn(isbn: "1234567890") {
@@ -128,5 +164,5 @@ class ApiTestCase(GraphQLTestCase):
         self.assertResponseNoErrors(response)
         content = json.loads(response.content)
         self.assertIn('data', content)
-        self.assertIn('createBookByISBN', content['data'])
+        self.assertIn('createBookByIsbn', content['data'])
         self.assertEqual(content['data']['createBookByISBN']['book']['isbn'], '1234567890')

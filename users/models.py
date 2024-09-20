@@ -82,7 +82,6 @@ class User(AbstractUser):
 
     def has_permission_user(self, perm: str, obj=None) -> bool:
         if self.is_superuser:
-            print("User is superuser, granting permission.")
             return True
 
         user_groups = self.groups.all().prefetch_related('permissions')

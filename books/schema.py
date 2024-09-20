@@ -1,5 +1,6 @@
 import graphene
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db.models import Q
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required, permission_required
 
@@ -74,13 +75,10 @@ class Query(graphene.ObjectType):
             books = books.filter(title__icontains=title)
 
         if author_name:
-            books = books.filter(author__name__icontains=author_name)
+            books = books.filter(authors__name__icontains=author_name)
 
-        if year_gte is not None:
-            books = books.filter(publication_year__gte=year_gte)
-
-        if year_lte is not None:
-            books = books.filter(publication_year__lte=year_lte)
+        if year_gte is not None and year_lte is not None:
+            books = books.filter(Q(publication_year__gte=year_gte) & Q(publication_year__lte=year_lte))
 
         return books
 
@@ -115,7 +113,7 @@ class CreateAuthor(graphene.Mutation):
         biography = graphene.String()
     author = graphene.Field(AuthorType)
 
-    # @login_required
+    @login_required
     def mutate(self, info, name, biography):
         if not info.context.user.has_permission_user('can_add_author'):
             raise Exception("У вас нет разрешения на выполнение этого действия.")
@@ -134,7 +132,7 @@ class CreateBook(graphene.Mutation):
 
     book = graphene.Field(BookType)
 
-    # @login_required
+    @login_required
     def mutate(self, info, title, author_ids, publication_year, isbn):
         if not info.context.user.has_permission_user('can_add_book'):
             raise Exception("У вас нет разрешения на выполнение этого действия.")
@@ -152,7 +150,7 @@ class CreateBookByISBN(graphene.Mutation):
 
     book = graphene.Field(BookType)
 
-    # @login_required
+    @login_required
     def mutate(self, info, isbn):
         if not info.context.user.has_permission_user('can_add_book'):
             raise Exception("У вас нет разрешения на выполнение этого действия.")
