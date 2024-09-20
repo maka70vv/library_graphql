@@ -165,4 +165,4 @@ class ApiTestCase(GraphQLTestCase):
         content = json.loads(response.content)
         self.assertIn('data', content)
         self.assertIn('createBookByIsbn', content['data'])
-        self.assertEqual(content['data']['createBookByISBN']['book']['isbn'], '1234567890')
+        self.assertEqual(content['data']['createBookByIsbn']['book']['isbn'], '1234567890')

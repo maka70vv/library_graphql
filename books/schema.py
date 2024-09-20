@@ -111,16 +111,15 @@ class CreateAuthor(graphene.Mutation):
     class Arguments:
         name = graphene.String()
         biography = graphene.String()
+
     author = graphene.Field(AuthorType)
 
     @login_required
+    @permission_required('can_add_author')
     def mutate(self, info, name, biography):
-        if not info.context.user.has_permission_user('can_add_author'):
-            raise Exception("У вас нет разрешения на выполнение этого действия.")
-        else:
-            author = Author(name=name, biography=biography)
-            author.save()
-            return CreateAuthor(author=author)
+        author = Author(name=name, biography=biography)
+        author.save()
+        return CreateAuthor(author=author)
 
 
 class CreateBook(graphene.Mutation):
@@ -133,15 +132,13 @@ class CreateBook(graphene.Mutation):
     book = graphene.Field(BookType)
 
     @login_required
+    @permission_required('can_add_book')
     def mutate(self, info, title, author_ids, publication_year, isbn):
-        if not info.context.user.has_permission_user('can_add_book'):
-            raise Exception("У вас нет разрешения на выполнение этого действия.")
-        else:
-            authors = Author.objects.filter(id__in=author_ids)
-            book = Book(title=title, publication_year=publication_year, isbn=isbn)
-            book.save()
-            book.authors.set(authors)
-            return CreateBook(book=book)
+        authors = Author.objects.filter(id__in=author_ids)
+        book = Book(title=title, publication_year=publication_year, isbn=isbn)
+        book.save()
+        book.authors.set(authors)
+        return CreateBook(book=book)
 
 
 class CreateBookByISBN(graphene.Mutation):
@@ -151,29 +148,27 @@ class CreateBookByISBN(graphene.Mutation):
     book = graphene.Field(BookType)
 
     @login_required
+    @permission_required('can_add_book')
     def mutate(self, info, isbn):
-        if not info.context.user.has_permission_user('can_add_book'):
-            raise Exception("У вас нет разрешения на выполнение этого действия.")
-        else:
-            book_info = get_book_info(isbn)
-            if not book_info:
-                raise Exception("Книга с таким ISBN не найдена.")
+        book_info = get_book_info(isbn)
+        if not book_info:
+            raise Exception("Книга с таким ISBN не найдена.")
 
-            author_names = book_info['authors']
-            authors = []
-            for name in author_names:
-                author, created = Author.objects.get_or_create(name=name)
-                authors.append(author)
+        author_names = book_info['authors']
+        authors = []
+        for name in author_names:
+            author, created = Author.objects.get_or_create(name=name)
+            authors.append(author)
 
-            book = Book(
-                title=book_info['title'],
-                publication_year=book_info['publication_year'],
-                isbn=isbn
-            )
-            book.save()
-            book.authors.set(authors)
+        book = Book(
+            title=book_info['title'],
+            publication_year=book_info['publication_year'],
+            isbn=isbn
+        )
+        book.save()
+        book.authors.set(authors)
 
-            return CreateBookByISBN(book=book)
+        return CreateBookByISBN(book=book)
 
 
 class Mutation(graphene.ObjectType):
